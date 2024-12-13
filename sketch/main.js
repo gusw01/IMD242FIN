@@ -6,6 +6,16 @@ const aspectH = 3;
 const container = document.body.querySelector('.container-canvas');
 // 필요에 따라 이하에 변수 생성.
 
+let video;
+let faceMesh;
+let faces = [];
+let options = { maxFaces: 1, refineLandmarks: false, flipHorizontal: false };
+
+function preload() {
+  // Load the faceMesh model
+  faceMesh = ml5.faceMesh(options);
+}
+
 function setup() {
   // 컨테이너의 현재 위치, 크기 등의 정보 가져와서 객체구조분해할당을 통해 너비, 높이 정보를 변수로 추출.
   const { width: containerW, height: containerH } =
@@ -31,6 +41,14 @@ function setup() {
   }
   init();
   // createCanvas를 제외한 나머지 구문을 여기 혹은 init()에 작성.
+
+  video = createCapture(VIDEO);
+  video.size(width, height);
+  video.parent(container);
+  video.hide();
+
+  // Start detecting faces from the webcam video
+  faceMesh.detectStart(video, gotFaces);
 }
 
 // windowResized()에서 setup()에 준하는 구문을 실행해야할 경우를 대비해 init이라는 명칭의 함수를 만들어 둠.
@@ -38,7 +56,25 @@ function init() {}
 
 function draw() {
   background('white');
-  circle(mouseX, mouseY, 50);
+  // circle(mouseX, mouseY, 50);
+  image(video, 0, 0, width, height);
+
+  // Draw all the tracked face points
+  for (let i = 0; i < faces.length; i++) {
+    let face = faces[i];
+    for (let j = 0; j < face.keypoints.length; j++) {
+      let keypoint = face.keypoints[j];
+      fill(0, 255, 0);
+      noStroke();
+      circle(keypoint.x, keypoint.y, 5);
+    }
+  }
+}
+
+// Callback function for when faceMesh outputs data
+function gotFaces(results) {
+  // Save the output to the faces variable
+  faces = results;
 }
 
 function windowResized() {
