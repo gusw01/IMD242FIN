@@ -7,15 +7,12 @@ const container = document.body.querySelector('.container-canvas');
 // 필요에 따라 이하에 변수 생성.
 
 let video;
-let faceMesh;
-let faces = [];
-let options = { maxFaces: 1, refineLandmarks: false, flipHorizontal: false };
-
-let faceGraphics;
-
-function preload() {
-  faceMesh = ml5.faceMesh(options);
-}
+let dots = [];
+let cols, rows;
+let size = 5;
+let margin = 30;
+let speed = 0.03;
+let scl;
 
 function setup() {
   // 컨테이너의 현재 위치, 크기 등의 정보 가져와서 객체구조분해할당을 통해 너비, 높이 정보를 변수로 추출.
@@ -48,101 +45,38 @@ function setup() {
   video.parent(container);
   video.hide();
 
-  faceMesh.detectStart(video, gotFaces);
+  cols = (width - margin * 2) / size;
+  rows = (height - margin * 2) / size;
 
-  faceGraphics = createGraphics(width, height);
-  faceGraphics.pixelDensity(1);
+  for (let i = 0; i < cols; i++) {
+    dots[i] = [];
+    for (let j = 0; j < rows; j++) {
+      let x = margin + size / 2 + i * size;
+      let y = margin + size / 2 + j * size;
+      let distance = dist(x, y, width / 2, height / 2);
+      let angle = map(distance, 0, width / 2, 0, TWO_PI * 3);
+      let scl = map(distance, 0, width / 2, 0.05, 0.03);
+      dots[i][j] = new Dot(x, y, angle, speed, scl);
+    }
+  }
 }
 
 // windowResized()에서 setup()에 준하는 구문을 실행해야할 경우를 대비해 init이라는 명칭의 함수를 만들어 둠.
 function init() {}
 
 function draw() {
-  background('white');
+  // background('white');
+  // circle(mouseX, mouseY, 50);
   image(video, 0, 0, width, height);
-  filter(GRAY);
 
-  for (let i = 0; i < faces.length; i++) {
-    let face = faces[i];
+  background(0, 10);
 
-    let centerX = 0;
-    let centerY = 0;
-    for (let j = 0; j < face.keypoints.length; j++) {
-      centerX += face.keypoints[j].x;
-      centerY += face.keypoints[j].y;
-    }
-    centerX /= face.keypoints.length;
-    centerY /= face.keypoints.length;
-
-    let outlinePoints = getExpandedOutlinePoints(
-      face.keypoints,
-      centerX,
-      centerY,
-      20
-    );
-
-    faceGraphics.clear();
-    faceGraphics.fill(0, 200);
-    faceGraphics.noStroke();
-    faceGraphics.beginShape();
-    for (let j = 0; j < outlinePoints.length; j++) {
-      faceGraphics.vertex(outlinePoints[j].x, outlinePoints[j].y);
-    }
-    faceGraphics.endShape(CLOSE);
-
-    faceGraphics.filter(BLUR, 10);
-
-    image(faceGraphics, 0, 0);
-    // filter(BLUR, 3);
-
-    // fill(0, 0, 0, 100);
-    // noStroke();
-    // beginShape();
-    // for (let j = 0; j < outlinePoints.length; j++) {
-    //   vertex(outlinePoints[j].x, outlinePoints[j].y);
-    // }
-    // endShape(CLOSE);
-
-    for (let j = 0; j < 100; j++) {
-      let randomKeypoint = random(face.keypoints);
-      let radius = random(1, 3);
-      fill(255, 255, 255, random(200, 255));
-      noStroke();
-      circle(randomKeypoint.x, randomKeypoint.y, radius);
-    }
-
-    for (let j = 0; j < face.keypoints.length; j++) {
-      let keypoint = face.keypoints[j];
-      fill(255, 255, 255);
-      noStroke();
-      circle(keypoint.x, keypoint.y, 0);
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      dots[i][j].update();
+      dots[i][j].display();
     }
   }
-}
-
-function gotFaces(results) {
-  faces = results;
-}
-
-function getExpandedOutlinePoints(keypoints, centerX, centerY, expansion) {
-  const outlineIndices = [
-    10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379,
-    378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127,
-    162, 21, 54, 103, 67, 109,
-  ];
-
-  return outlineIndices.map((index) => {
-    let point = keypoints[index];
-    let dx = point.x - centerX;
-    let dy = point.y - centerY;
-    let distance = Math.sqrt(dx * dx + dy * dy);
-    let scale = (distance + expansion) / distance;
-
-    return {
-      x: centerX + dx * scale,
-      y: centerY + dy * scale,
-    };
-  });
 }
 
 function windowResized() {
