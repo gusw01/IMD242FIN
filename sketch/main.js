@@ -15,7 +15,9 @@ let lastCenterX = 0;
 let lastCenterY = 0;
 let faceMoveSpeed = 0;
 
-let faceGraphics; // 얼굴 블러 처리를 위한 그래픽 레이어
+let faceGraphics;
+
+let boxX, boxY, boxWidth, boxHeight;
 
 function preload() {
   faceMesh = ml5.faceMesh(options);
@@ -54,8 +56,13 @@ function setup() {
 
   faceMesh.detectStart(video, gotFaces);
 
-  faceGraphics = createGraphics(width, height); // 블러 처리용 그래픽 레이어
+  faceGraphics = createGraphics(width, height);
   faceGraphics.pixelDensity(1);
+
+  boxWidth = 250;
+  boxHeight = 250;
+  boxX = (width - boxWidth) / 2;
+  boxY = (height - boxHeight) / 2;
 }
 
 // windowResized()에서 setup()에 준하는 구문을 실행해야할 경우를 대비해 init이라는 명칭의 함수를 만들어 둠.
@@ -66,7 +73,7 @@ function draw() {
   image(video, 0, 0, width, height);
   filter(GRAY);
 
-  faceGraphics.clear(); // 이전 프레임의 얼굴 영역 지우기
+  faceGraphics.clear();
 
   for (let i = 0; i < faces.length; i++) {
     let face = faces[i];
@@ -81,10 +88,33 @@ function draw() {
     centerX /= face.keypoints.length;
     centerY /= face.keypoints.length;
 
-    // 얼굴 움직임 속도 계산
-    faceMoveSpeed = dist(centerX, centerY, lastCenterX, lastCenterY);
-    lastCenterX = centerX;
-    lastCenterY = centerY;
+    // 얼굴이 박스 안에 있는지 확인
+    let isInsideBox =
+      centerX > boxX &&
+      centerX < boxX + boxWidth &&
+      centerY > boxY &&
+      centerY < boxY + boxHeight;
+
+    // 박스 안에 있을 때 화면 흔들림
+    if (isInsideBox) {
+      translate(random(-2, 2), random(-2, 2));
+    }
+
+    // 메시지 번갈아 출력
+    let message = '';
+    if (isInsideBox) {
+      message = frameCount % 2 < 1 ? 'Data Residue' : 'Unknown';
+    }
+
+    // 메시지 출력
+    if (message !== '') {
+      textSize(16);
+      textWidth(0);
+      textAlign(CENTER, CENTER);
+      fill('white');
+      noStroke();
+      text(message, width / 2, boxY - 25);
+    }
 
     // 얼굴 윤곽선을 기반으로 외곽선 확장
     let expandedOutline = getExpandedOutlinePoints(
@@ -95,7 +125,7 @@ function draw() {
     );
 
     // 얼굴 영역을 faceGraphics에 그리기
-    faceGraphics.fill(0, 100);
+    faceGraphics.fill(100, 100, 100);
     faceGraphics.noStroke();
     faceGraphics.beginShape();
     for (let point of expandedOutline) {
@@ -104,7 +134,7 @@ function draw() {
     faceGraphics.endShape(CLOSE);
 
     // 얼굴 영역에 블러 필터 적용
-    faceGraphics.filter(BLUR, 15);
+    faceGraphics.filter(BLUR, 10);
 
     // 얼굴 블러를 메인 캔버스에 그리기
     image(faceGraphics, 0, 0);
@@ -112,52 +142,53 @@ function draw() {
     let maxRadius = 400; // 얼굴 외곽까지 점 퍼짐 반경
     let numPoints = 10000; // 노이즈 점의 개수
 
-    // 얼굴 윤곽선을 선으로 연결
-    // for (let i = 0; i < face.keypoints.length - 1; i++) {
-    //   let p1 = face.keypoints[i];
-    //   let p2 = face.keypoints[(i + 1) % face.keypoints.length];
-    //   stroke(255, 100);
-    //   line(p1.x, p1.y, p2.x, p2.y);
-    // }
-
     // 얼굴 윤곽 따라 노이즈 점 생성
     for (let j = 0; j < numPoints; j++) {
-      let randomKeypoint = random(face.keypoints); // 랜덤 얼굴 점 선택
-      let angle = random(TWO_PI); // 각도
+      let randomKeypoint = random(face.keypoints);
+      let angle = random(TWO_PI);
       let radius = randomGaussian(0, maxRadius * 0.1); // 얼굴 외곽으로 갈수록 퍼짐
       let x = randomKeypoint.x + cos(angle) * radius;
       let y = randomKeypoint.y + sin(angle) * radius;
 
-      // 노이즈 흑백 색상과 투명도 조정
       let noiseValue = noise(x * 200, y * 200);
-      let colorValue = map(noiseValue, 0, 1, 0, 200); // 더 불규칙한 색상
+      let colorValue = map(noiseValue, 0, 1, 0, 200); // 불규칙한 색상
       let alphaValue = map(abs(radius), 0, maxRadius, 255, 200); // 외곽으로 갈수록 투명도 감소
 
       fill(colorValue, alphaValue);
       noStroke();
-      circle(x, y, random(1, 3)); // 점 크기 랜덤화
+      circle(x, y, random(1, 3));
     }
 
+    // 얼굴 움직임 속도 계산
+    faceMoveSpeed = dist(centerX, centerY, lastCenterX, lastCenterY);
+    lastCenterX = centerX;
+    lastCenterY = centerY;
+
     // 반짝이 효과 (얼굴 움직임에 따라 변화)
-    for (let j = 0; j < 20; j++) {
-      let randomKeypoint = random(face.keypoints); // 랜덤 얼굴 점
+    for (let j = 0; j < 40; j++) {
+      let randomKeypoint = random(face.keypoints);
       let offsetAngle = random(TWO_PI);
-      let offsetRadius = random(10, 50); // 얼굴 점 근처에 위치
+      let offsetRadius = random(10, 50);
 
       let x = randomKeypoint.x + cos(offsetAngle) * offsetRadius;
       let y = randomKeypoint.y + sin(offsetAngle) * offsetRadius;
 
-      let flickerAlpha = 200 + 55 * sin(frameCount * 0.05 + j); // 반짝이는 효과
+      let flickerAlpha = 200 + 55 * sin(frameCount * 0.05 + j);
 
-      // 움직임에 따라 반짝이 크기와 투명도 변화
-      let sparkleSize = map(faceMoveSpeed, 5, 10, 1, 2); // 움직임 클수록 큰 반짝이
-      let sparkleAlpha = map(faceMoveSpeed, 5, 10, 150, 255); // 움직임 클수록 더 밝음
+      let sparkleSize = random(1, 6);
+      let sparkleAlpha = map(faceMoveSpeed, 5, 10, 50, 255); // 움직임 클수록 더 밝음
 
       fill(255, 255, 255, flickerAlpha * (sparkleAlpha / 255));
       noStroke();
-      circle(x, y, random(sparkleSize / 2, sparkleSize)); // 반짝이 크기
+      circle(x, y, random(sparkleSize / 2, sparkleSize));
     }
   }
+
+  // 박스
+  noFill();
+  stroke('white');
+  strokeWeight(1);
+  rect(boxX, boxY, boxWidth, boxHeight);
 }
 
 function gotFaces(results) {
