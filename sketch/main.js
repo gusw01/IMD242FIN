@@ -59,8 +59,8 @@ function setup() {
   faceGraphics = createGraphics(width, height);
   faceGraphics.pixelDensity(1);
 
-  boxWidth = 250;
-  boxHeight = 250;
+  boxWidth = 350;
+  boxHeight = 350;
   boxX = (width - boxWidth) / 2;
   boxY = (height - boxHeight) / 2;
 }
@@ -72,6 +72,7 @@ function draw() {
   background('white');
   image(video, 0, 0, width, height);
   filter(GRAY);
+  tint(200, 200, 200);
 
   faceGraphics.clear();
 
@@ -100,6 +101,30 @@ function draw() {
       translate(random(-2, 2), random(-2, 2));
     }
 
+    // // 박스 크기 변경
+    // if (faces.length > 0) {
+    //   let face = faces[0];
+
+    //   // 얼굴 중심 계산
+    //   let centerX = 0;
+    //   let centerY = 0;
+    //   for (let j = 0; j < face.keypoints.length; j++) {
+    //     centerX += face.keypoints[j].x;
+    //     centerY += face.keypoints[j].y;
+    //   }
+    //   centerX /= face.keypoints.length;
+    //   centerY /= face.keypoints.length;
+
+    //   // 박스 크기와 위치 변경
+    //   boxWidth = constrain(abs(centerX - lastCenterX) * 10 + 100, 250, 300);
+    //   boxHeight = constrain(abs(centerY - lastCenterY) * 10 + 100, 250, 300);
+    //   boxX = centerX - boxWidth / 2;
+    //   boxY = centerY - boxHeight / 2;
+
+    //   lastCenterX = centerX;
+    //   lastCenterY = centerY;
+    // }
+
     // 메시지 번갈아 출력
     let message = '';
     if (isInsideBox) {
@@ -110,10 +135,10 @@ function draw() {
     if (message !== '') {
       textSize(16);
       textWidth(0);
-      textAlign(CENTER, CENTER);
+      textAlign(LEFT, CENTER);
       fill('white');
       noStroke();
-      text(message, width / 2, boxY - 25);
+      text(message, boxX, boxY - 40);
     }
 
     // 얼굴 윤곽선을 기반으로 외곽선 확장
@@ -125,7 +150,7 @@ function draw() {
     );
 
     // 얼굴 영역을 faceGraphics에 그리기
-    faceGraphics.fill(100, 100, 100);
+    faceGraphics.fill(120, 120, 120);
     faceGraphics.noStroke();
     faceGraphics.beginShape();
     for (let point of expandedOutline) {
@@ -165,6 +190,7 @@ function draw() {
     lastCenterY = centerY;
 
     // 반짝이 효과 (얼굴 움직임에 따라 변화)
+    push();
     for (let j = 0; j < 40; j++) {
       let randomKeypoint = random(face.keypoints);
       let offsetAngle = random(TWO_PI);
@@ -182,13 +208,23 @@ function draw() {
       noStroke();
       circle(x, y, random(sparkleSize / 2, sparkleSize));
     }
-  }
+    pop();
 
-  // 박스
-  noFill();
-  stroke('white');
-  strokeWeight(1);
-  rect(boxX, boxY, boxWidth, boxHeight);
+    if (isInsideBox) {
+      for (let i = 0; i < face.keypoints.length; i++) {
+        let p1 = face.keypoints[i];
+        let p2 = random(face.keypoints);
+        stroke(0, 10);
+        line(p1.x, p1.y, p2.x, p2.y);
+      }
+    }
+
+    // 박스
+    noFill();
+    stroke('white');
+    strokeWeight(1);
+    rect(boxX, boxY, boxWidth, boxHeight);
+  }
 }
 
 function gotFaces(results) {
