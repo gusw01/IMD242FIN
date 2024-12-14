@@ -23,7 +23,7 @@ body {
   height: 100svh;
   margin: 0;
   overflow-y: hidden;
-  font-family: "Pretendard Variable", sans-serif;
+  font-family: 'Pretendard Variable', sans-serif;
   color: oklch(32% 0 0deg);
 }
 
@@ -163,8 +163,8 @@ ol {
   text-decoration: none;
 }
 .references span::before {
-  content: "“";
+  content: '“';
 }
 .references span::after {
-  content: "”";
+  content: '”';
 }

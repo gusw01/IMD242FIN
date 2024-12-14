@@ -19,8 +19,11 @@ let faceGraphics;
 
 let boxX, boxY, boxWidth, boxHeight;
 
+let michromaFont;
+
 function preload() {
   faceMesh = ml5.faceMesh(options);
+  michromaFont = loadFont('assets/Michroma-Regular.ttf');
 }
 
 function setup() {
@@ -59,10 +62,12 @@ function setup() {
   faceGraphics = createGraphics(width, height);
   faceGraphics.pixelDensity(1);
 
-  boxWidth = 350;
-  boxHeight = 350;
+  boxWidth = 300;
+  boxHeight = 300;
   boxX = (width - boxWidth) / 2;
   boxY = (height - boxHeight) / 2;
+
+  textFont(michromaFont);
 }
 
 // windowResized()에서 setup()에 준하는 구문을 실행해야할 경우를 대비해 init이라는 명칭의 함수를 만들어 둠.
@@ -96,11 +101,6 @@ function draw() {
       centerY > boxY &&
       centerY < boxY + boxHeight;
 
-    // 박스 안에 있을 때 화면 흔들림
-    if (isInsideBox) {
-      translate(random(-2, 2), random(-2, 2));
-    }
-
     // // 박스 크기 변경
     // if (faces.length > 0) {
     //   let face = faces[0];
@@ -129,6 +129,7 @@ function draw() {
     let message = '';
     if (isInsideBox) {
       message = frameCount % 2 < 1 ? 'Data Residue' : 'Unknown';
+      translate(random(-2, 2), random(-2, 2));
     }
 
     // 메시지 출력
@@ -138,7 +139,7 @@ function draw() {
       textAlign(LEFT, CENTER);
       fill('white');
       noStroke();
-      text(message, boxX, boxY - 40);
+      text(message, boxX, boxY - 20);
     }
 
     // 얼굴 윤곽선을 기반으로 외곽선 확장
@@ -225,6 +226,22 @@ function draw() {
     strokeWeight(1);
     rect(boxX, boxY, boxWidth, boxHeight);
   }
+
+  textAlign(CENTER, CENTER);
+  textSize(40);
+  fill(255);
+  noStroke();
+  text('UNKNOWN', width / 2, height - 80);
+
+  textSize(10);
+  textAlign(LEFT, TOP);
+  let yStart = 30; // 첫 텍스트의 Y 좌표
+  let lineHeight = 30; // 줄 간격
+
+  text('AI SYSTEM', 30, yStart);
+  text('PROCESSING...', 30, yStart + lineHeight);
+  text('UNRECOGNIZED DATA', 30, yStart + lineHeight * 2);
+  text('IDENTITY PENDING', 30, yStart + lineHeight * 3);
 }
 
 function gotFaces(results) {
