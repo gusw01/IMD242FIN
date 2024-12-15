@@ -335,7 +335,7 @@ function draw() {
   textSize(30);
   fill(255);
   noStroke();
-  text('UNKNOWN', width / 2, height - 50);
+  text('UNKNOWN', width / 2, height - 80);
 }
 
 function gotFaces(results) {
