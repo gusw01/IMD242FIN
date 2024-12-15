@@ -310,7 +310,7 @@ function draw() {
     const padding = 20; // 네모 박스와 텍스트 사이 간격
     const infoXStart = boxX + boxWidth + padding; // 텍스트 시작 X 좌표
     const infoYStart = boxY; // 텍스트 시작 Y 좌표 (박스의 Y 위치와 맞춤)
-    const infoLineHeight = 20; // 줄 간격
+    const infoLineHeight = 30; // 줄 간격
 
     text(`Eye Width: ${leftEyeWidth.toFixed(2)}`, infoXStart, infoYStart);
     text(
