@@ -143,7 +143,6 @@ function draw() {
       // 흑백 필터 적용
       let grayValue = (videoColor[0] + videoColor[1] + videoColor[2]) / 3;
 
-      // 그래픽에 흑백 컬러로 그리기
       faceGraphics.fill(grayValue, grayValue, grayValue, 200);
       faceGraphics.vertex(localX, localY);
     }
@@ -155,8 +154,8 @@ function draw() {
     // 메인 캔버스에 얼굴 블러 이미지를 오버레이
     image(faceGraphics, 0, 0, width, height);
 
-    let maxRadius = 400; // 얼굴 외곽까지 점 퍼짐 반경
-    let numPoints = 6000; // 노이즈 점의 개수
+    let maxRadius = 400;
+    let numPoints = 6000;
 
     // 얼굴 윤곽 따라 노이즈 점 생성
     for (let j = 0; j < numPoints; j++) {
@@ -237,7 +236,7 @@ function draw() {
     if (faces.length > 0) {
       let face = faces[0];
 
-      // 얼굴 중심 계산
+      // 얼굴 중심
       let centerX = 0;
       let centerY = 0;
       for (let j = 0; j < face.keypoints.length; j++) {
@@ -257,7 +256,7 @@ function draw() {
       lastCenterY = centerY;
     }
 
-    // 눈 크기 계산 (왼쪽 눈)
+    // 눈 크기 (왼쪽 눈)
     const leftEyeWidth =
       dist(
         face.keypoints[362].x,
@@ -274,7 +273,7 @@ function draw() {
         face.keypoints[374].y
       ) || 0;
 
-    // 입 크기 계산
+    // 입 크기
     const mouthWidth =
       dist(
         face.keypoints[61].x,
@@ -291,7 +290,7 @@ function draw() {
         face.keypoints[14].y
       ) || 0;
 
-    // 감정 상태 추정 (기본적인 조건)
+    // 감정 상태
     let emotion = 'Neutral';
     if (mouthHeight > leftEyeHeight * 2) {
       emotion = 'Surprised';
@@ -306,11 +305,11 @@ function draw() {
     textAlign(LEFT, TOP);
     fill('white');
     noStroke();
-    // 정보 출력 시작 좌표를 네모 박스 오른쪽으로 이동
-    const padding = 20; // 네모 박스와 텍스트 사이 간격
-    const infoXStart = boxX + boxWidth + padding; // 텍스트 시작 X 좌표
-    const infoYStart = boxY; // 텍스트 시작 Y 좌표 (박스의 Y 위치와 맞춤)
-    const infoLineHeight = 30; // 줄 간격
+
+    const padding = 20;
+    const infoXStart = boxX + boxWidth + padding;
+    const infoYStart = boxY;
+    const infoLineHeight = 30;
 
     text(`Eye Width: ${leftEyeWidth.toFixed(2)}`, infoXStart, infoYStart);
     text(
